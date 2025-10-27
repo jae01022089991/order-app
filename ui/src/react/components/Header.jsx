@@ -5,7 +5,7 @@ const Header = () => {
     return (
         <header className="site-header">
             <div className="container header-inner">
-                <h1 className="brand">COZY</h1>
+                <h1 className="brand">수재's cafe</h1>
                 <nav>
                     <ul className="nav-list">
                         <li><Link className="nav-link" to="/">주문하기</Link></li>

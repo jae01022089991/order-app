@@ -1,13 +1,19 @@
-import React from 'react'
+import React from 'react';
 
-const Cart = ({ items, onRemove }) => {
-  const calcItemPrice = (it) => {
-    let price = it.price
-    if (it.options?.shot) price += 500
-    return price * (it.qty || 1)
-  }
+const Cart = ({ items, onRemove, onCreateOrder }) => {
+  const calcItemPrice = (cartItem) => {
+    const optionsPrice = cartItem.selectedOptions.reduce((sum, option) => sum + option.price, 0);
+    return (cartItem.item.price + optionsPrice) * cartItem.qty;
+  };
 
-  const total = items.reduce((s, it) => s + calcItemPrice(it), 0)
+  const total = items.reduce((sum, item) => sum + calcItemPrice(item), 0);
+
+  const getOptionNames = (cartItem) => {
+    if (!cartItem.selectedOptions || cartItem.selectedOptions.length === 0) {
+      return '';
+    }
+    return ` (${cartItem.selectedOptions.map(o => o.name).join(', ')})`;
+  };
 
   return (
     <aside className="cart">
@@ -16,11 +22,11 @@ const Cart = ({ items, onRemove }) => {
           <h3>주문 내역</h3>
           <div className="cart-list">
             {items.length === 0 && <div className="empty">장바구니가 비어있습니다.</div>}
-            {items.map((it, idx) => (
+            {items.map((it) => (
               <div key={it.key} className="cart-item">
                 <div className="cart-item-info">
-                  <div className="cart-name">{it.name} {it.options?.shot ? '(샷 추가)' : ''} {it.options?.syrup ? '(시럽 추가)' : ''}</div>
-                  <div className="cart-qty">x {it.qty || 1}</div>
+                  <div className="cart-name">{it.item.name}{getOptionNames(it)}</div>
+                  <div className="cart-qty">x {it.qty}</div>
                 </div>
                 <div className="cart-price">{calcItemPrice(it).toLocaleString()}원</div>
                 <button className="remove-item-btn" onClick={() => onRemove(it.key)}>X</button>
@@ -35,11 +41,17 @@ const Cart = ({ items, onRemove }) => {
             <div className="total-label">총 금액</div>
             <div className="total-amount">{total.toLocaleString()}원</div>
           </div>
-          <button className="button order-button">주문하기</button>
+          <button 
+            className="button order-button" 
+            onClick={onCreateOrder} 
+            disabled={items.length === 0}
+          >
+            주문하기
+          </button>
         </div>
       </div>
     </aside>
-  )
-}
+  );
+};
 
-export default Cart
+export default Cart;

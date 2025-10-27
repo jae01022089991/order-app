@@ -142,3 +142,18 @@
 .action-btn:hover {
   background-color: #0056b3;
 }
+
+.order-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.action-btn.cancel-btn {
+  background-color: #dc3545; /* Red */
+}
+
+.action-btn.cancel-btn:hover {
+  background-color: #c82333;
+}
