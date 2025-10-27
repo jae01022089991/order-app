@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
     return (
@@ -7,8 +8,8 @@ const Header = () => {
                 <h1 className="brand">COZY</h1>
                 <nav>
                     <ul className="nav-list">
-                        <li><a className="nav-link" href="#order">주문하기</a></li>
-                        <li><a className="nav-link" href="#admin">관리자</a></li>
+                        <li><Link className="nav-link" to="/">주문하기</Link></li>
+                        <li><Link className="nav-link" to="/admin">관리자</Link></li>
                     </ul>
                 </nav>
             </div>
