@@ -1,0 +1,29 @@
+{
+  "name": "coffee-order-app",
+  "version": "1.0.0",
+  "description": "A full-stack web app for ordering coffee.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.4",
+    "vite": "^4.0.0",
+    "vitest": "^4.0.2"
+  },
+  "keywords": [
+    "coffee",
+    "order",
+    "app",
+    "react",
+    "vite"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

@@ -1,0 +1,1 @@
+// This file contains the main logic for the vanilla JavaScript application.
