@@ -3,13 +3,23 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 
+// Build the connection string from environment variables
+const connectionString = process.env.DATABASE_URL || 
+  (process.env.DB_HOST ? `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}` : undefined);
+
 console.log("--- DEBUGGING RENDER ENV VARS ---");
-console.log("DATABASE_URL variable is:", process.env.DATABASE_URL);
+console.log("DATABASE_URL:", process.env.DATABASE_URL);
+console.log("DB_HOST:", process.env.DB_HOST);
+console.log("Constructed Connection String:", connectionString ? 'present' : 'absent');
 console.log("--- END DEBUGGING ---");
+
 
 // Database Connection
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: connectionString,
+  ssl: {
+    rejectUnauthorized: false
+  },
 });
 
 // Test DB Connection

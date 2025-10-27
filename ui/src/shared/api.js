@@ -1,3 +1,5 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 const handleResponse = async (response) => {
     if (response.ok) {
         return response.json();
@@ -11,7 +13,7 @@ const handleResponse = async (response) => {
 
 export const fetchMenus = async () => {
     try {
-        const response = await fetch('/api/menus');
+        const response = await fetch(`${API_BASE_URL}/api/menus`);
         return handleResponse(response);
     } catch (error) {
         console.error('Error fetching menus:', error);
@@ -21,7 +23,7 @@ export const fetchMenus = async () => {
 
 export const createOrder = async (orderData) => {
     try {
-        const response = await fetch('/api/orders', {
+        const response = await fetch(`${API_BASE_URL}/api/orders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderData),
@@ -37,7 +39,7 @@ export const createOrder = async (orderData) => {
 
 export const getAdminSummary = async () => {
     try {
-        const response = await fetch('/api/admin/summary');
+        const response = await fetch(`${API_BASE_URL}/api/admin/summary`);
         return handleResponse(response);
     } catch (error) {
         console.error('Error fetching admin summary:', error);
@@ -47,7 +49,7 @@ export const getAdminSummary = async () => {
 
 export const getMenusForAdmin = async () => {
     try {
-        const response = await fetch('/api/admin/menus');
+        const response = await fetch(`${API_BASE_URL}/api/admin/menus`);
         return handleResponse(response);
     } catch (error) {
         console.error('Error fetching menus for admin:', error);
@@ -57,7 +59,7 @@ export const getMenusForAdmin = async () => {
 
 export const getOrders = async (status) => {
     try {
-        const url = status ? `/api/orders?status=${status}` : '/api/orders';
+        const url = status ? `${API_BASE_URL}/api/orders?status=${status}` : `${API_BASE_URL}/api/orders`;
         const response = await fetch(url);
         return handleResponse(response);
     } catch (error) {
@@ -68,7 +70,7 @@ export const getOrders = async (status) => {
 
 export const updateOrderStatus = async (orderId, status) => {
     try {
-        const response = await fetch(`/api/orders/${orderId}/status`, {
+        const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/status`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status }),
@@ -82,7 +84,7 @@ export const updateOrderStatus = async (orderId, status) => {
 
 export const updateMenuStock = async (menuId, stockUpdate) => {
     try {
-        const response = await fetch(`/api/menus/${menuId}/stock`, {
+        const response = await fetch(`${API_BASE_URL}/api/menus/${menuId}/stock`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(stockUpdate),
@@ -96,7 +98,7 @@ export const updateMenuStock = async (menuId, stockUpdate) => {
 
 export const cancelOrder = async (orderId) => {
     try {
-        const response = await fetch(`/api/orders/${orderId}/cancel`, {
+        const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/cancel`, {
             method: 'PATCH',
         });
         return handleResponse(response);
