@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import eslint from 'vite-plugin-eslint';
 
 // Use an async config so we can safely dynamic-import ESM-only plugins.
 export default defineConfig(async () => {
@@ -15,7 +16,7 @@ export default defineConfig(async () => {
   }
 
   return {
-    plugins: [reactPlugin].filter(Boolean),
+    plugins: [reactPlugin, eslint()].filter(Boolean),
     resolve: {
       alias: {
         '@': '/src',

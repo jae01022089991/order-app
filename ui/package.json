@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "test": "vitest"
   },
   "dependencies": {
     "react": "^18.0.0",
@@ -15,7 +16,10 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.4",
+    "eslint": "^8.57.1",
+    "eslint-config-react-app": "^7.0.1",
     "vite": "^4.0.0",
+    "vite-plugin-eslint": "^1.8.1",
     "vitest": "^4.0.2"
   },
   "keywords": [
