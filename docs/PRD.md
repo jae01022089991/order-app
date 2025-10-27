@@ -171,3 +171,172 @@
 - 관리자 권한 및 인증은 최소 구현 또는 로컬 보호(학습 목적).
 - 실시간 알림 구현은 우선 폴링으로 시작 가능, 이후 WebSocket 고려.
 - 모든 주요 변경은 서버 로그에 기록되어야 함(감사 추적).
+
+# 백엔드 PRD
+
+## 목적
+- 커피 주문 앱의 프런트엔드에 필요한 데이터를 제공하고, 주문 및 재고와 관련된 비즈니스 로직을 처리하는 안정적인 API 서버를 구축합니다.
+
+## 주요 기능
+- 메뉴 정보 관리 및 제공
+- 주문 접수 및 상태 관리
+- 재고 수량 관리 및 동기화
+
+## 1. 데이터 모델 (Database Schema)
+- 데이터베이스는 PostgreSQL을 사용합니다.
+- 각 테이블의 관계를 명확히 하여 데이터 무결성을 보장합니다.
+
+### 1.1 `menus` 테이블
+- 커피 메뉴에 대한 정보를 저장합니다.
+- **컬럼:**
+  - `id` (PK, SERIAL): 메뉴 고유 ID
+  - `name` (VARCHAR(255), NOT NULL): 커피 이름 (예: '아메리카노(ICE)')
+  - `description` (TEXT): 메뉴 설명
+  - `price` (INTEGER, NOT NULL): 가격 (원 단위)
+  - `image_url` (VARCHAR(255)): 메뉴 이미지 URL
+  - `stock` (INTEGER, NOT NULL, DEFAULT 0): 재고 수량
+
+### 1.2 `options` 테이블
+- 메뉴에 추가할 수 있는 옵션 정보를 저장합니다.
+- **컬럼:**
+  - `id` (PK, SERIAL): 옵션 고유 ID
+  - `name` (VARCHAR(255), NOT NULL): 옵션 이름 (예: '샷 추가', '시럽 추가')
+  - `price` (INTEGER, NOT NULL, DEFAULT 0): 옵션 추가 가격
+
+### 1.3 `menu_options` 테이블 (Junction Table)
+- 메뉴와 옵션 간의 다대다(N:M) 관계를 설정합니다.
+- **컬럼:**
+  - `menu_id` (FK, INTEGER): `menus` 테이블의 ID 참조
+  - `option_id` (FK, INTEGER): `options` 테이블의 ID 참조
+
+### 1.4 `orders` 테이블
+- 사용자의 주문 정보를 저장합니다.
+- **컬럼:**
+  - `id` (PK, SERIAL): 주문 고유 ID
+  - `created_at` (TIMESTAMP, DEFAULT NOW()): 주문 생성 일시
+  - `status` (VARCHAR(50), NOT NULL, DEFAULT '주문 접수'): 주문 상태 ('주문 접수', '제조 중', '완료')
+  - `total_price` (INTEGER, NOT NULL): 주문 총액
+
+### 1.5 `order_items` 테이블
+- 특정 주문에 어떤 메뉴와 옵션이 포함되었는지 저장합니다.
+- **컬럼:**
+  - `id` (PK, SERIAL): 주문 항목 고유 ID
+  - `order_id` (FK, INTEGER): `orders` 테이블의 ID 참조
+  - `menu_id` (FK, INTEGER): `menus` 테이블의 ID 참조
+  - `quantity` (INTEGER, NOT NULL): 주문 수량
+  - `price_per_item` (INTEGER, NOT NULL): 항목별 단가 (옵션 포함)
+
+### 1.6 `order_item_options` 테이블 (Junction Table)
+- 특정 주문 항목에 어떤 옵션이 적용되었는지 저장합니다.
+- **컬럼:**
+  - `order_item_id` (FK, INTEGER): `order_items` 테이블의 ID 참조
+  - `option_id` (FK, INTEGER): `options` 테이블의 ID 참조
+
+## 2. API 설계 (API Endpoints)
+- API는 RESTful 원칙을 따르며, 모든 응답은 JSON 형식을 사용합니다.
+- 프런트엔드 PRD에 명시된 API 요구사항과 일관성을 유지합니다.
+
+### 2.1 메뉴 API
+- **`GET /api/menus`**
+  - **설명:** 프런트엔드에 표시할 모든 메뉴 목록을 조회합니다. 재고(`stock`) 정보는 관리자만 접근 가능해야 하지만, 초기 버전에서는 모든 정보를 함께 제공합니다.
+  - **응답 (200 OK):**
+    ```json
+    [
+      {
+        "id": 1,
+        "name": "아메리카노(ICE)",
+        "description": "시원하고 깔끔한...",
+        "price": 4000,
+        "imageUrl": "...",
+        "stock": 100,
+        "options": [
+          { "id": 1, "name": "샷 추가", "price": 500 },
+          { "id": 2, "name": "시럽 추가", "price": 0 }
+        ]
+      }
+    ]
+    ```
+
+### 2.2 주문 API
+- **`POST /api/orders`**
+  - **설명:** 신규 주문을 생성합니다. 주문 생성 시 관련된 메뉴의 재고를 차감해야 합니다. 이 과정은 트랜잭션(Transaction)으로 처리하여 데이터 일관성을 보장해야 합니다.
+  - **요청 본문:**
+    ```json
+    {
+      "items": [
+        { "menuId": 1, "quantity": 2, "optionIds": [2] },
+        { "menuId": 3, "quantity": 1, "optionIds": [] }
+      ],
+      "totalPrice": 13000
+    }
+    ```
+  - **응답 (201 CREATED):**
+    ```json
+    {
+      "orderId": 101,
+      "status": "주문 접수",
+      "createdAt": "2025-10-27T14:30:00Z"
+    }
+    ```
+  - **오류 응답 (400 Bad Request):** 재고 부족 시
+    ```json
+    { "error": "재고가 부족합니다. (메뉴: 아메리카노(ICE))" }
+    ```
+
+- **`GET /api/orders`**
+  - **설명:** 관리자 페이지의 '주문 현황'에 표시될 모든 주문 목록을 조회합니다.
+  - **쿼리 파라미터:** `?status=주문 접수` 등으로 상태별 필터링이 가능해야 합니다.
+  - **응답 (200 OK):**
+    ```json
+    [
+      {
+        "id": 101,
+        "createdAt": "2025-10-27T14:30:00Z",
+        "status": "주문 접수",
+        "totalPrice": 13000,
+        "items": [
+          { "name": "아메리카노(ICE)", "quantity": 2, "options": ["시럽 추가"] }
+        ]
+      }
+    ]
+    ```
+
+- **`GET /api/orders/:id`**
+  - **설명:** 특정 주문의 상세 정보를 조회합니다.
+  - **응답 (200 OK):** 위 `GET /api/orders`의 단일 객체와 동일한 형식.
+
+### 2.3 관리자 API
+- **`PATCH /api/orders/:id/status`**
+  - **설명:** 관리자가 주문의 상태를 변경합니다. (예: '주문 접수' -> '제조 중')
+  - **요청 본문:**
+    ```json
+    { "status": "제조 중" }
+    ```
+  - **응답 (200 OK):**
+    ```json
+    { "orderId": 101, "newStatus": "제조 중" }
+    ```
+
+- **`PATCH /api/menus/:id/stock`**
+  - **설명:** 관리자가 특정 메뉴의 재고를 수동으로 조절합니다.
+  - **요청 본문:**
+    ```json
+    { "delta": 10 } // 10개 증가
+    // 또는 { "stock": 50 } // 재고를 50으로 설정
+    ```
+  - **응답 (200 OK):**
+    ```json
+    { "menuId": 1, "newStock": 60 }
+    ```
+
+- **`GET /api/admin/summary`**
+  - **설명:** 관리자 대시보드에 표시될 요약 정보를 조회합니다.
+  - **응답 (200 OK):**
+    ```json
+    {
+      "total": 120,
+      "received": 5,
+      "inProgress": 8,
+      "completed": 107
+    }
+    ```
